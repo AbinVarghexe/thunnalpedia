@@ -93,3 +93,7 @@ yarn-error.log*
 *.sln
 *.sw?
 .DS_Store
+
+# Graphify
+graphify-out/
+

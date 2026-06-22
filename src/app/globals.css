@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-accent-gold: var(--accent-gold);
+  --color-divider: var(--divider);
+  --font-sans: var(--font-outfit), sans-serif;
+  --font-display: var(--font-syne), sans-serif;
+}
+
+:root {
+  --bg-primary: hsl(60, 20%, 99%);
+  --bg-secondary: hsl(60, 10%, 95%);
+  --text-primary: hsl(60, 5%, 10%);
+  --text-secondary: hsl(60, 4%, 41%);
+  --accent-gold: hsl(35, 38%, 64%);
+  --divider: hsl(60, 8%, 90%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: hsl(60, 5%, 6%);
+    --bg-secondary: hsl(60, 6%, 9%);
+    --text-primary: hsl(60, 10%, 94%);
+    --text-secondary: hsl(60, 4%, 63%);
+    --accent-gold: hsl(35, 42%, 74%);
+    --divider: hsl(60, 5%, 16%);
+  }
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
