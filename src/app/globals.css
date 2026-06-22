@@ -1,37 +1,178 @@
 @import "tailwindcss";
 
 @theme {
+  /* Brand Reds */
+  --color-primary-50: var(--primary-50);
+  --color-primary-100: var(--primary-100);
+  --color-primary-200: var(--primary-200);
+  --color-primary-300: var(--primary-300);
+  --color-primary-400: var(--primary-400);
+  --color-primary-500: var(--primary-500);
+  --color-primary-600: var(--primary-600);
+  --color-primary-700: var(--primary-700);
+  --color-primary-800: var(--primary-800);
+  --color-primary-900: var(--primary-900);
+
+  /* Neutrals */
+  --color-white: var(--white);
+  --color-gray-50: var(--gray-50);
+  --color-gray-100: var(--gray-100);
+  --color-gray-200: var(--gray-200);
+  --color-gray-300: var(--gray-300);
+  --color-gray-400: var(--gray-400);
+  --color-gray-500: var(--gray-500);
+  --color-gray-600: var(--gray-600);
+  --color-gray-700: var(--gray-700);
+  --color-gray-800: var(--gray-800);
+  --color-gray-900: var(--gray-900);
+
+  /* Context mappings */
   --color-bg-primary: var(--bg-primary);
   --color-bg-secondary: var(--bg-secondary);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
-  --color-accent-gold: var(--accent-gold);
   --color-divider: var(--divider);
-  --font-sans: var(--font-outfit), sans-serif;
-  --font-display: var(--font-syne), sans-serif;
+
+  /* Fonts */
+  --font-sans: var(--font-poppins), sans-serif;
+  --font-display: var(--font-poppins), sans-serif;
+  --font-malayalam: var(--font-poppins), var(--font-manjari), var(--font-noto-malayalam), "FSL Malabar", serif;
+
+  /* Radius */
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 32px;
+  --radius-xl: 48px;
+
+  /* Transitions */
+  --animate-float: float 4s ease-in-out infinite;
 }
 
 :root {
-  --bg-primary: hsl(60, 20%, 99%);
-  --bg-secondary: hsl(60, 10%, 95%);
-  --text-primary: hsl(60, 5%, 10%);
-  --text-secondary: hsl(60, 4%, 41%);
-  --accent-gold: hsl(35, 38%, 64%);
-  --divider: hsl(60, 8%, 90%);
+  /* Brand Reds */
+  --primary-50: #FFF1F1;
+  --primary-100: #FFE4E4;
+  --primary-200: #FFCACA;
+  --primary-300: #FFA3A3;
+  --primary-400: #FF7676;
+  --primary-500: #FF4F4F;
+  --primary-600: #F33434;
+  --primary-700: #E11D2E;
+  --primary-800: #C81E1E;
+  --primary-900: #A51717;
+
+  /* Neutrals */
+  --white: #FFFFFF;
+  --gray-50: #FAFAFA;
+  --gray-100: #F5F5F5;
+  --gray-200: #E5E5E5;
+  --gray-300: #D4D4D4;
+  --gray-400: #A3A3A3;
+  --gray-500: #737373;
+  --gray-600: #525252;
+  --gray-700: #404040;
+  --gray-800: #262626;
+  --gray-900: #171717;
+
+  /* Context Theme Defaults */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #FAFAFA;
+  --text-primary: #171717;
+  --text-secondary: #737373;
+  --divider: #E5E5E5;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-primary: hsl(60, 5%, 6%);
-    --bg-secondary: hsl(60, 6%, 9%);
-    --text-primary: hsl(60, 10%, 94%);
-    --text-secondary: hsl(60, 4%, 63%);
-    --accent-gold: hsl(35, 42%, 74%);
-    --divider: hsl(60, 5%, 16%);
-  }
+
+/* Base resets & typography specs */
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+/* Custom Gradients */
+.bg-brand-gradient {
+  background: linear-gradient(135deg, #FF9B9B 0%, #FF6B6B 40%, #E11D2E 100%);
+}
+
+.text-brand-gradient {
+  background: linear-gradient(135deg, #FF9B9B 0%, #FF6B6B 40%, #E11D2E 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-typo-gradient {
+  background: linear-gradient(180deg, #FFB2B2 0%, #FF7A7A 50%, #E11D2E 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Editorial Grid Background */
+.bg-editorial-grid {
+  background-image:
+    linear-gradient(to right, rgba(225, 29, 46, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(225, 29, 46, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .bg-editorial-grid {
+    background-image:
+      linear-gradient(to right, rgba(255, 79, 79, 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 79, 79, 0.04) 1px, transparent 1px);
+  }
+}
+
+/* Custom Shadows */
+.shadow-soft {
+  box-shadow: 0 8px 32px rgba(255, 79, 79, 0.08);
+}
+
+.shadow-elevated {
+  box-shadow: 0 12px 40px rgba(255, 79, 79, 0.15);
+}
+
+/* Glassmorphism */
+.glassmorphism {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.dark .glassmorphism {
+  background: rgba(23, 23, 23, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* Smooth Scrolling snap classes */
+.scroll-snap-x {
+  scroll-snap-type: x mandatory;
+}
+
+.scroll-snap-align-start {
+  scroll-snap-align: start;
+}
+
+/* Float Keyframes */
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* Custom transitions definition */
+.transition-editorial {
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
