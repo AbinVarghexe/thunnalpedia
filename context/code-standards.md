@@ -1,50 +1,62 @@
-# Code Standards
+# THUNNAL Coding Standards & Conventions
 
-## General
+This document defines the development practices, file naming patterns, and coding conventions for the THUNNAL e-commerce frontend.
 
-- Keep modules small and single-purpose.
-- Fix root causes — do not layer workarounds.
-- Do not mix unrelated concerns in one component or route.
-- Respect the system boundaries defined in `architecture-context.md`.
+---
 
-## TypeScript
+## 1. General Principles
 
-- Strict mode is required throughout the project.
-- Avoid `any`; use explicit interfaces or narrowly scoped types.
-- Validate unknown external input at system boundaries before trusting it.
-- Use `interface` for object contracts.
+- **Single Responsibility**: Keep React components and utility files focused on one core job.
+- **Server Components by Default**: Next.js App Router route components (`page.js`, `layout.js`) must be Server Components. 
+- **Client Components on Demand**: Use `"use client"` only when a component relies on:
+  - React hooks (`useState`, `useEffect`, `useContext`).
+  - Browser-only APIs (cookies, localStorage, intersection observers).
+  - Framer Motion or interactive animations.
+- **No Private Credential Exposure**: Never prefix sensitive keys (like admin webhook keys) with `NEXT_PUBLIC_`. Keep them hidden in server-only modules.
 
-## Next.js
+---
 
-- Default to React Server Components.
-- Add `"use client"` only when the component needs browser interactivity, hooks, or real-time state.
-- Keep route handlers focused on a single responsibility.
-- Long-running work belongs in background tasks, not in request handlers.
+## 2. Styling Standards (Tailwind CSS)
 
-## Styling
+- **Map to Design Tokens**: Do not use hardcoded hex values in component inline styles or raw Tailwind classes. Use mapped theme classes:
+  - Backgrounds: `bg-primary`, `bg-secondary`.
+  - Text: `text-primary`, `text-secondary`, `text-accent`.
+  - Borders: `border-divider`.
+- **Responsive Layouts**: Utilize Tailwind's breakpoints (`sm:`, `md:`, `lg:`, `xl:`) systematically. Default layout rules must be mobile-first.
+- **Sharp Aesthetics**: Adhere to sharp, square corners (`rounded-none`) as established in the design context.
 
-- Use CSS custom property tokens defined in `globals.css` — no raw Tailwind color classes like `zinc-*` or hardcoded hex values.
-- Reference tokens through their Tailwind utility names: `bg-base`, `text-copy-primary`, `border-surface-border`, `text-brand`, etc.
-- Maintain the border radius scale: `rounded-xl` for small elements, `rounded-2xl` for cards, `rounded-3xl` for modals.
+---
 
-## API Routes
+## 3. Data Fetching & Shopify Integrations
 
-- Validate and parse request input before any logic runs.
-- Enforce auth and project ownership checks before any mutation.
-- Return consistent, predictable response shapes.
-- Keep route handlers thin — push complexity into shared modules or background tasks.
+- **GraphQL Client Helpers**: Write queries inside `lib/shopify/queries.js` and mutations in `lib/shopify/mutations.js`. Use parameterized variables instead of string interpolation to prevent injection bugs.
+- **Storefront SDK Wrappers**: Wrap cart operations inside client-side helpers that trigger Shopify cart mutation queries, updating the local Zustand cart store on completion.
+- **ISR Tagging**: When fetching products or collections from Server Components, tag the fetch with appropriate revalidation keys:
+  ```javascript
+  const response = await fetch(SHOPIFY_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Shopify-Storefront-Access-Token': ACCESS_TOKEN,
+    },
+    body: JSON.stringify({ query, variables }),
+    next: { tags: ['products'] } // Enables instant purging via Webhooks
+  });
+  ```
 
-## Data and Storage
+---
 
-- Project metadata and relationships belong in PostgreSQL via Prisma.
-- Canvas snapshots and generated specs belong in Vercel Blob; Prisma stores only the blob URL reference.
-- Do not store large generated content directly in the database.
-- Task run records are first-class relational data — treat ownership and run IDs as verified before any token issuance.
+## 4. State Management (Zustand)
 
-## File Organization
+- **Atomic Stores**: Keep stores simple. Use a `useCartStore` to toggle the drawer open state and cache optimistic cart items, and a `useUIStore` for banners and navigation indicators.
+- **Actions alongside State**: Define state mutation actions directly within the Zustand store definition to keep the logic self-contained.
 
-- `lib/` — shared infrastructure: Prisma client, auth helpers, utilities.
-- `trigger/` — all durable background tasks and AI workflows.
-- `components/` — UI composition only; no business logic.
-- `app/api/` — route handlers for auth, triggering, and persistence.
-- Name files after the responsibility they contain, not the technology.
+---
+
+## 5. Directory & File Naming Conventions
+
+- **Component Folders**: Save storefront sections inside `components/storefront/` and small UI parts (buttons, badges) inside `components/ui/`.
+- **CamelCase / Kebab-case**: 
+  - Use PascalCase for React component file names (e.g., `ProductScroll.jsx`, `HeroSection.jsx`).
+  - Use kebab-case for Next.js folder routes and static utility assets (e.g., `/products/[handle]`, `/api/revalidate`).
+- **Clean Imports**: Use `@/*` imports defined in `jsconfig.json` (or `tsconfig.json` if using TypeScript) to keep imports neat and readable.

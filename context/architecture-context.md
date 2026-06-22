@@ -1,68 +1,76 @@
-# Architecture Context
+# THUNNAL Architecture Context
 
-## Stack
+This document defines the system boundaries, data layers, integration interfaces, and architectural invariants for the headless **THUNNAL** clothing store.
 
-| Layer            | Technology              | Role                                                           |
-| ---------------- | ----------------------- | -------------------------------------------------------------- |
-| Framework        | Next.js 16 + TypeScript | Full-stack app with server/client boundaries                   |
-| UI               | Tailwind + shadcn/ui    | Component composition and styling                              |
-| Auth             | Clerk                   | User identity and route protection                             |
-| Database         | Prisma + PostgreSQL     | Relational metadata: projects, collaborators, specs, task runs |
-| Canvas           | Liveblocks + React Flow | Real-time collaborative canvas, presence, and cursors          |
-| Background tasks | Trigger.dev             | Durable AI generation workflows                                |
-| Artifact storage | Vercel Blob             | Canvas snapshots and generated Markdown specs                  |
+---
 
-## System Boundaries
+## 1. Technology Stack & Roles
 
-- `app/api` — Authenticated request handlers: input validation, ownership checks, task triggering, and persistence.
-- `trigger` — Long-running background jobs: AI design generation and spec generation.
-- `lib` — Shared infrastructure: Prisma client, access control helpers, and utilities.
-- `components` — UI composition: canvas surfaces, sidebars, dialogs, and interactive elements.
-- `prisma` — Database schema and generated client output.
-- `data` — Legacy local directory. Not used for new artifacts.
+| Layer | Technology | Role |
+| :--- | :--- | :--- |
+| **Frontend Framework** | Next.js 14+ (App Router) | Structural skeleton, server/client code splitting, routing, dynamic sitemaps. |
+| **Styling** | Tailwind CSS | Utility-first responsive design framework. |
+| **Global Client State** | Zustand | Manages UI state: Cart open/close, search overlay, mobile navigation, global alerts. |
+| **Commerce SDK** | Shopify Hydrogen React SDK | Integrates the Shopify `CartProvider`, fetches storefront sessions, and handles checkout URL generations. |
+| **Data Fetching Layer** | Storefront GraphQL API | Fetching products, collection data, and variants. |
+| **API Middleware** | Next.js Route Handlers | Receives Shopify admin webhooks for Instant Cache Revalidation. |
+| **Hosting & Deployment** | Vercel / Netlify | Edge caching, serverless function executions, global CDN distribution. |
 
-## Storage Model
+---
 
-- **Database**: metadata, ownership, relationships, and task run records.
-- **Vercel Blob**: generated artifacts — canvas snapshots at `canvas/{projectId}.json` and specs at `specs/{projectId}/{specId}.md`.
-- Project records, spec records, and task run records belong in PostgreSQL.
-- Canvas content and Markdown output are stored in and retrieved from Vercel Blob.
-- The blob URL is stored in the database (`canvasJsonPath`, `filePath`) as the reference to the artifact.
+## 2. System Boundaries & File Structure
 
-## Auth and Collaboration Model
+The project structure is organized to separate concerns and ensure high performance:
 
-- Every project has a single owner (Clerk user ID).
-- Projects can include additional collaborators.
-- Only authenticated users can access protected routes.
-- Only the owner or a collaborator can mutate project resources.
-- Liveblocks room tokens are issued only after verifying project membership.
+- `/app` — Routing and layouts. Product pages (`/products/[handle]`) and Collections (`/collections/[handle]`) are defined here as **Next.js Server Components** to run server-side GraphQL fetches.
+- `/app/api` — Route handlers for webhook listeners (e.g. `/api/revalidate` for updating cached collection content when Shopify changes occur).
+- `/components` — Split into:
+  - `/components/ui`: Presentation components (buttons, badges, inputs).
+  - `/components/storefront`: Landing page specific blocks (Hero, ProductScroll, CountdownBanner, BrandBoard, Testimonials).
+- `/lib/shopify` — Queries and mutations defined in pure GraphQL, with custom request utilities communicating with the Storefront API client.
+- `/context` — Static markdown context files describing project state.
+- `/styles` — Global styling and tailwind initial configurations.
 
-## Starter System Designs
+---
 
-- Prebuilt templates are static canvas snapshots stored in the codebase.
-- Templates are loaded into the active Liveblocks room when a user imports one.
-- Import can occur on canvas creation or from within the editor at any time.
-- Template data follows the same node/edge schema as user-created canvas content.
-- Templates do not require a separate database record; they are resolved by template ID at import time.
+## 3. Storage & State Model
 
-## AI Generation Model
+### A. Shopify Backend (Source of Truth)
+- Inventory levels, pricing, currency mappings, descriptions, media assets, and legal documents are stored in the Shopify Admin.
+- The checkout session data and order records live strictly on Shopify servers.
 
-### Design Generation
+### B. Next.js Static Cache
+- Product listings are statically rendered at build time and cached on the edge CDN.
+- Whenever products are updated, a POST request is sent by Shopify to `/api/revalidate`, purging the page cache instantly using `revalidateTag` or `revalidatePath`.
 
-- Input: user prompt, project context, and current canvas state.
-- Execution: durable background task via Trigger.dev.
-- Output: structured node and edge updates written into the shared Liveblocks room.
+### C. Client Session Cart
+- Cart state (the `cartId`) is persisted in browser cookies or localStorage. 
+- Updates to quantities or sizes trigger background mutations to the Shopify Cart API.
 
-### Spec Generation
+---
 
-- Input: current canvas graph and project context.
-- Execution: durable background task via Trigger.dev.
-- Output: Markdown technical spec saved to the filesystem and linked to the project in the database.
+## 4. Webhook and Revalidation Flow
 
-## Invariants
+```
++---------------+                    +-------------------------+
+| Shopify Admin | --[Product Update]--> | Next.js API Revalidate  |
++---------------+                    +-------------------------+
+                                                  |
+                                                  v
+                                      revalidateTag('products')
+                                                  |
+                                                  v
+                                      Next.js purges CDN Cache
+```
 
-1. Request handlers do not run long-lived AI work — that belongs in background tasks.
-2. Metadata and large generated artifacts are stored in separate layers.
-3. Auth and ownership are enforced at every mutation boundary.
-4. Client components are used only where browser interactivity or real-time state requires them.
-5. The canvas schema must remain consistent between user-created content and imported templates.
+- Webhook paths are secured using a HMAC signature check calculated against the shared Shopify Admin webhook secret.
+
+---
+
+## 5. Architectural Invariants
+
+1. **Strict Decoupling**: Frontend components must never call Shopify Admin APIs (which contain private credentials). Only client-safe Storefront APIs should be queried.
+2. **Standard Checkout**: No credit card or transactional input is collected on our Next.js frontend; checkout is handled entirely by Shopify's secure redirect.
+3. **Optimistic Cart UI**: Cart state updates (adding/removing items) must reflect immediately in the client UI (using Zustand or optimist hooks) while background Storefront Cart mutations execute.
+4. **Performance Budgets**: Hero assets and background videos must be compressed and lazy-loaded to prevent slowing down first contentful paint (FCP).
+5. **No Hardcoded Storefront Credentials**: Shopify tokens must be loaded via environment variables (`process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN`).

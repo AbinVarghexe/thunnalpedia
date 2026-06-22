@@ -6,17 +6,16 @@ Build this project incrementally using a spec-driven workflow. Context files def
 
 ## Scoping Rules
 
-- Work on one feature unit or subsystem at a time.
+- Work on one feature unit or component at a time.
 - Prefer small, verifiable increments over large speculative changes.
 - Do not combine unrelated system boundaries in a single implementation step.
 
 ## When To Split Work
 
 Split an implementation step if it combines:
-
-- UI changes and background task changes
-- Real-time canvas state and database persistence
-- Multiple unrelated API routes
+- UI components and Shopify Cart API integrations
+- Local Zustand stores and server-side route handlers
+- Multiple unrelated pages or collections
 - Behavior that is not clearly defined in the context files
 
 If a change cannot be verified end to end quickly, the scope is too broad — split it.
@@ -30,22 +29,15 @@ If a change cannot be verified end to end quickly, the scope is too broad — sp
 ## Protected Foundation Components
 
 Do not modify generated third-party foundation components unless explicitly instructed.
-
 This includes:
-
-- `components/ui/*` (shadcn/ui components)
-- third-party library internals
-
-These should remain default and reusable.
+- `@shopify/hydrogen-react` SDK internals.
+- third-party library internals.
 
 Project-specific styling, layout changes, and feature logic must be implemented in app-level components instead of modifying foundation components.
-
-Only modify these files when a task explicitly requires it.
 
 ## Keeping Docs In Sync
 
 Update the relevant context file whenever implementation changes:
-
 - System architecture or boundaries
 - Storage model decisions
 - Code conventions or standards
@@ -58,3 +50,4 @@ Progress state must reflect the actual state of the implementation, not the inte
 1. The current unit works end to end within its defined scope.
 2. No invariant defined in `architecture-context.md` was violated.
 3. `progress-tracker.md` reflects the completed work.
+4. Changes are committed to Git on their respective feature branches, then merged cleanly to `dev`.
